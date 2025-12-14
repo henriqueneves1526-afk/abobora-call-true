@@ -84,6 +84,7 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
   console.log(`🔗 Teste:https://abobora-call-true.onrender.com`);
-
+const serverUrl = 'https://abobora-call-true.onrender.com'; // ⬅️ COLE SUA URL AQUI
 });
+
 
