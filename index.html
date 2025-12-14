@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎃 Abobora Call - Chamadas Aleatórias</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #0a0a0a; color: white; min-height: 100vh; overflow-x: hidden; }
+        
+        /* PARTÍCULAS */
+        #particles-js { 
+            position: fixed; 
+            width: 100%; 
+            height: 100%; 
+            z-index: -1; 
+            background: #0a0a0a;
+        }
+        
+        /* TELA DE PERFIL */
+        #profile-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .profile-card {
+            background: rgba(32, 34, 37, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.08);
+            animation: appear 0.7s ease-out;
+        }
+        
+        @keyframes appear {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .logo { text-align: center; margin-bottom: 30px; }
+        
+        .logo h1 {
+            font-size: 3rem;
+            background: linear-gradient(90deg, #ff5500, #ffaa00, #ffff00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% auto;
+            animation: rgbFlow 3s linear infinite;
+        }
+        
+        @keyframes rgbFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        .avatar-upload { text-align: center; margin: 20px 0; }
+        .avatar-preview {
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            background: #2c2f33;
+            border: 3px solid #ff8c00;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; color: #b9bbbe; }
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%; padding: 12px 15px;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+        }
+        .input-group select { height: 120px; }
+        .input-group textarea { min-height: 80px; resize: vertical; }
+        
+        .btn {
+            width: 100%; padding: 15px;
+            background: linear-gradient(135deg, #ff8c00, #e67e00);
+            color: white; border: none;
+            border-radius: 10px;
+            font-size: 1.1rem; font-weight: bold;
+            cursor: pointer; margin-top: 10px;
+            transition: transform 0.3s;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        
+        /* TELA DE CALL */
+        #main-app { display: none; min-height: 100vh; }
+        .app-header {
+            background: rgba(32,34,37,0.95);
+            padding: 15px 30px;
+            display: flex; justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-avatar {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            border: 2px solid #43b581;
+            overflow: hidden;
+        }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .call-container {
+            display: flex; justify-content: center;
+            align-items: center;
+            height: calc(100vh - 80px);
+            padding: 20px;
+        }
+        
+        .floating-avatars {
+            position: relative;
+            width: 100%; max-width: 800px;
+            height: 400px;
+        }
+        
+        .avatar-call {
+            position: absolute;
+            width: 160px; height: 160px;
+            border-radius: 50%;
+            border: 4px solid;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            transition: all 0.8s ease;
+        }
+        .avatar-call.user { border-color: #ff8c00; }
+        .avatar-call.partner { border-color: #43b581; }
+        .avatar-call img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .call-controls {
+            position: fixed; bottom: 30px;
+            left: 0; right: 0;
+            display: flex; justify-content: center;
+            gap: 20px;
+        }
+        
+        .control-btn {
+            padding: 15px 30px;
+            border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: bold;
+            cursor: pointer; display: flex;
+            align-items: center; gap: 10px;
+            min-width: 180px; justify-content: center;
+        }
+        .control-btn.next { background: #ff8c00; color: white; }
+        .control-btn.end { background: #f04747; color: white; }
+        .control-btn:hover { transform: translateY(-3px); }
+        
+        .status-indicator {
+            position: fixed; top: 90px; right: 30px;
+            background: rgba(32,34,37,0.9);
+            padding: 12px 20px; border-radius: 10px;
+            border-left: 4px solid #43b581;
+        }
+        
+        @media (max-width: 768px) {
+            .profile-card { padding: 25px; max-width: 90%; }
+            .logo h1 { font-size: 2.2rem; }
+            .call-controls { flex-direction: column; align-items: center; }
+            .control-btn { min-width: 90%; }
+            .avatar-call { width: 130px; height: 130px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- PARTÍCULAS NO FUNDO -->
+    <div id="particles-js"></div>
+    
+    <!-- TELA DE PERFIL -->
+    <div id="profile-screen">
+        <div class="profile-card">
+            <div class="logo">
+                <h1>🎃 ABOBORA CALL</h1>
+                <p style="color: #b9bbbe; margin-top: 5px;">Leite - Conexões aleatórias</p>
+            </div>
+            
+            <div class="avatar-upload">
+                <div class="avatar-preview" id="avatarPreview" onclick="document.getElementById('avatarInput').click()">
+                    <img id="avatarImage" src="https://ui-avatars.com/api/?name=Usuario&background=ff8c00&color=fff&size=120" alt="Avatar">
+                </div>
+                <input type="file" id="avatarInput" accept="image/*" style="display:none">
+                <p style="color: #72767d; font-size: 0.9rem;">Clique para escolher foto</p>
+            </div>
+            
+            <div class="input-group">
+                <label>Seu Nome</label>
+                <input type="text" id="username" placeholder="Como quer ser chamado?">
+            </div>
+            
+            <div class="input-group">
+                <label>Seus Interesses (selecione vários)</label>
+                <select id="user-interests" multiple>
+                    <option value="games">🎮 Jogos</option>
+                    <option value="music">🎵 Música</option>
+                    <option value="movies">🎬 Filmes</option>
+                    <option value="tech">💻 Tecnologia</option>
+                    <option value="sports">⚽ Esportes</option>
+                </select>
+                <small style="color: #72767d;">Segure CTRL para selecionar múltiplos</small>
+            </div>
+            
+            <button class="btn" onclick="saveProfile()">
+                🚀 ENTRAR NO LEITE
+            </button>
+        </div>
+    </div>
+    
+    <!-- TELA DE CALL -->
+    <div id="main-app">
+        <header class="app-header">
+            <div class="logo">
+                <h1 style="font-size: 1.5rem;">🎃 ABOBORA CALL</h1>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">
+                    <img id="headerAvatar" src="" alt="Avatar">
+                </div>
+                <div>
+                    <div id="displayUsername" style="font-weight: bold;">Usuário</div>
+                    <div id="connectionStatus" style="color: #43b581; font-size: 0.9rem;">● Conectando...</div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="status-indicator" id="statusIndicator">
+            🎯 Procurando conexão...
+        </div>
+        
+        <main class="call-container">
+            <div class="floating-avatars" id="floatingAvatars">
+                <!-- Avatares aparecem aqui -->
+            </div>
+        </main>
+        
+        <div class="call-controls">
+            <button class="control-btn next" onclick="nextPartner()">
+                ⏭️ PRÓXIMO
+            </button>
+            <button class="control-btn end" onclick="endCall()">
+                ❌ SAIR
+            </button>
+        </div>
+    </div>
+    
+    <!-- SCRIPTS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        // ========== PARTÍCULAS ==========
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 120, density: { enable: true, value_area: 800 } },
+                color: { value: "#ffffff" },
+                shape: { type: "circle" },
+                opacity: { value: 0.5, random: true },
+                size: { value: 3, random: true },
+                move: {
+                    enable: true,
+                    speed: 1.5,
+                    direction: "bottom",
+                    random: true,
+                    out_mode: "out"
+                }
+            },
+            interactivity: {
+                events: {
+                    onhover: { enable: true, mode: "repulse" },
+                    onclick: { enable: true, mode: "push" }
+                }
+            }
+        });
+        
+        // ========== VARIÁVEIS ==========
+        let socket = null;
+        let userProfile = {
+            username: 'Anônimo',
+            avatar: 'https://ui-avatars.com/api/?name=Usuario&background=ff8c00&color=fff&size=120',
+            interests: []
+        };
+        
+        // ========== UPLOAD DE AVATAR ==========
+        document.getElementById('avatarInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Imagem muito grande! Máximo 5MB.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById('avatarImage').src = event.target.result;
+                userProfile.avatar = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        // ========== SALVAR PERFIL ==========
+        function saveProfile() {
+            const username = document.getElementById('username').value.trim();
+            if (!username || username.length < 2) {
+                alert('Escolha um nome com pelo menos 2 letras!');
+                return;
+            }
+            
+            userProfile.username = username;
+            
+            // Pega interesses
+            const interestsSelect = document.getElementById('user-interests');
+            const selected = Array.from(interestsSelect.selectedOptions);
+            userProfile.interests = selected.map(opt => opt.value);
+            
+            // Salva localmente
+            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+            
+            // Atualiza cabeçalho
+            document.getElementById('displayUsername').textContent = userProfile.username;
+            document.getElementById('headerAvatar').src = userProfile.avatar;
+            
+            // Transição de tela
+            document.getElementById('profile-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('profile-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                initializeChat();
+            }, 500);
+        }
+        
+        // ========== INICIALIZAR CHAT (CONECTA AO SERVIDOR) ==========
+        function initializeChat() {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.textContent = 'Conectando...';
+            statusElement.style.color = '#ff8c00';
+            
+            // ⚠️ IMPORTANTE: TROQUE ESTA URL PELA DO SEU SERVIDOR!
+            // Quando hospedar no Render/Railway, coloque a URL aqui
+            const serverUrl = 'https://abobora-call-real.onrender.com'; // <- VAI MUDAR ISSO
+            
+            // Conecta ao servidor
+            socket = io(serverUrl, {
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionAttempts: 5
+            });
+            
+            // Eventos do Socket.IO
+            socket.on('connect', () => {
+                console.log('✅ Conectado ao servidor');
+                statusElement.textContent = 'Procurando parceiro...';
+                statusElement.style.color = '#43b581';
+                
+                // Entra na fila
+                socket.emit('join-pool', userProfile);
+            });
+            
+            socket.on('partner-found', (partnerData) => {
+                console.log('🎯 Parceiro encontrado:', partnerData);
+                statusElement.textContent = 'Conectado com ' + partnerData.username;
+                statusElement.style.color = '#43b581';
+                
+                // Cria avatares
+                createFloatingAvatars(partnerData);
+                
+                // Atualiza status
+                document.getElementById('statusIndicator').innerHTML = 
+                    `✅ Conectado com: <strong>${partnerData.username}</strong>`;
+            });
+            
+            socket.on('partner-disconnected', () => {
+                statusElement.textContent = 'Parceiro saiu...';
+                statusElement.style.color = '#f04747';
+                document.getElementById('floatingAvatars').innerHTML = '';
+                
+                document.getElementById('statusIndicator').innerHTML = 
+                    '🔍 Buscando novo parceiro...';
+                
+                setTimeout(() => {
+                    socket.emit('find-new-partner');
+                }, 2000);
+            });
+            
+            socket.on('connect_error', (error) => {
+                console.error('❌ Erro:', error);
+                statusElement.textContent = 'Erro. Tentando novamente...';
+                statusElement.style.color = '#f04747';
+            });
+        }
+        
+        // ========== CRIAR AVATARES FLUTUANTES ==========
+        function createFloatingAvatars(partnerData) {
+            const container = document.getElementById('floatingAvatars');
+            container.innerHTML = '';
+            
+            // Seu avatar
+            const userAvatar = document.createElement('div');
+            userAvatar.className = 'avatar-call user';
+            userAvatar.innerHTML = `<img src="${userProfile.avatar}" alt="${userProfile.username}">`;
+            
+            // Avatar do parceiro
+            const partnerAvatar = document.createElement('div');
+            partnerAvatar.className = 'avatar-call partner';
+            partnerAvatar.innerHTML = `<img src="${partnerData.avatar || 'https://ui-avatars.com/api/?name=' + partnerData.username + '&background=43b581&color=fff&size=160'}" alt="${partnerData.username}">`;
+            
+            container.appendChild(userAvatar);
+            container.appendChild(partnerAvatar);
+            
+            // Posiciona
+            setTimeout(() => {
+                userAvatar.style.left = '30%';
+                userAvatar.style.top = '50%';
+                userAvatar.style.transform = 'translate(-50%, -50%)';
+                
+                partnerAvatar.style.left = '70%';
+                partnerAvatar.style.top = '50%';
+                partnerAvatar.style.transform = 'translate(-50%, -50%)';
+            }, 100);
+        }
+        
+        // ========== FUNÇÕES DE CONTROLE ==========
+        function nextPartner() {
+            if (!socket) return;
+            
+            document.getElementById('connectionStatus').textContent = 'Buscando novo...';
+            document.getElementById('connectionStatus').style.color = '#ff8c00';
+            document.getElementById('floatingAvatars').innerHTML = '';
+            
+            socket.emit('find-new-partner');
+        }
+        
+        function endCall() {
+            if (confirm('Sair da chamada?')) {
+                if (socket) socket.disconnect();
+                
+                document.getElementById('main-app').style.display = 'none';
+                const profileScreen = document.getElementById('profile-screen');
+                profileScreen.style.display = 'flex';
+                profileScreen.style.opacity = '1';
+            }
+        }
+    </script>
+</body>
+</html>
