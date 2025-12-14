@@ -1,5 +1,5 @@
 {
-  "name": "abobora-call",
+  "name": "abobora-call-true",
   "version": "1.0.0",
   "description": "Chamadas aleatórias estilo Omegle",
   "main": "server.js",
