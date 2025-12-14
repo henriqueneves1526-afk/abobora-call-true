@@ -1,17 +1,51 @@
-{
-  "name": "abobora-call",
-  "version": "1.0.0",
-  "description": "Chamadas aleatórias estilo Omegle",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2"
-  },
-  "engines": {
-    "node": ">=16.0.0"
+const express = require('express');
+const socketIO = require('socket.io');
+const http = require('http');
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIO(server, {
+  cors: { origin: "*", methods: ["GET", "POST"] }
+});
+
+let waitingUsers = [];
+
+io.on('connection', (socket) => {
+  console.log('✅ Novo usuário:', socket.id);
+
+  socket.on('join-pool', (userData) => {
+    console.log(`👤 ${userData.username} entrou na fila`);
+    socket.userData = { id: socket.id, ...userData };
+    waitingUsers.push(socket);
+    matchUsers();
+  });
+
+  socket.on('find-new-partner', () => {
+    matchUsers();
+  });
+
+  socket.on('disconnect', () => {
+    waitingUsers = waitingUsers.filter(user => user.id !== socket.id);
+    if (socket.partnerId) {
+      io.to(socket.partnerId).emit('partner-disconnected');
+    }
+  });
+});
+
+function matchUsers() {
+  if (waitingUsers.length >= 2) {
+    const user1 = waitingUsers.shift();
+    const user2 = waitingUsers.shift();
+    
+    user1.partnerId = user2.id;
+    user2.partnerId = user1.id;
+    
+    user1.emit('partner-found', user2.userData);
+    user2.emit('partner-found', user1.userData);
   }
 }
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+});
