@@ -8,7 +8,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: #0a0a0a; color: white; min-height: 100vh; overflow-x: hidden; }
         
-        /* PARTÍCULAS */
         #particles-js { 
             position: fixed; 
             width: 100%; 
@@ -17,7 +16,6 @@
             background: #0a0a0a;
         }
         
-        /* TELA DE PERFIL */
         #profile-screen {
             display: flex;
             justify-content: center;
@@ -95,7 +93,6 @@
         }
         .btn:hover { transform: translateY(-2px); }
         
-        /* TELA DE CALL */
         #main-app { display: none; min-height: 100vh; }
         .app-header {
             background: rgba(32,34,37,0.95);
@@ -176,10 +173,8 @@
     </style>
 </head>
 <body>
-    <!-- PARTÍCULAS NO FUNDO -->
     <div id="particles-js"></div>
     
-    <!-- TELA DE PERFIL -->
     <div id="profile-screen">
         <div class="profile-card">
             <div class="logo">
@@ -218,7 +213,6 @@
         </div>
     </div>
     
-    <!-- TELA DE CALL -->
     <div id="main-app">
         <header class="app-header">
             <div class="logo">
@@ -255,7 +249,6 @@
         </div>
     </div>
     
-    <!-- SCRIPTS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
@@ -319,19 +312,15 @@
             
             userProfile.username = username;
             
-            // Pega interesses
             const interestsSelect = document.getElementById('user-interests');
             const selected = Array.from(interestsSelect.selectedOptions);
             userProfile.interests = selected.map(opt => opt.value);
             
-            // Salva localmente
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
             
-            // Atualiza cabeçalho
             document.getElementById('displayUsername').textContent = userProfile.username;
             document.getElementById('headerAvatar').src = userProfile.avatar;
             
-            // Transição de tela
             document.getElementById('profile-screen').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('profile-screen').style.display = 'none';
@@ -346,11 +335,11 @@
             statusElement.textContent = 'Conectando...';
             statusElement.style.color = '#ff8c00';
             
-            // ⚠️ IMPORTANTE: TROQUE ESTA URL PELA DO SEU SERVIDOR!
-            // Quando hospedar no Render/Railway, coloque a URL aqui
-            const serverUrl = 'https://abobora-call-true.vercel.app/; // <- VAI MUDAR ISSO
+            // ⭐⭐⭐⭐ AQUI É ONDE VOCÊ COLOCA O LINK DO BACKEND ⭐⭐⭐⭐
+            // COLE A URL DO SEU BACKEND AQUI (ex: https://abobora-call-backend.onrender.com)
+            const serverUrl = 'https://abobora-call-true.onrender.com'; // ⬅️ COLE SUA URL AQUI
             
-            // Conecta ao servidor
+            // ⭐⭐⭐⭐ IMPORTANTE: Esta linha usa a serverUrl para conectar! ⭐⭐⭐⭐
             socket = io(serverUrl, {
                 transports: ['websocket', 'polling'],
                 reconnection: true,
@@ -359,11 +348,10 @@
             
             // Eventos do Socket.IO
             socket.on('connect', () => {
-                console.log('✅ Conectado ao servidor');
+                console.log('✅ Conectado ao servidor:', serverUrl);
                 statusElement.textContent = 'Procurando parceiro...';
                 statusElement.style.color = '#43b581';
                 
-                // Entra na fila
                 socket.emit('join-pool', userProfile);
             });
             
@@ -372,10 +360,8 @@
                 statusElement.textContent = 'Conectado com ' + partnerData.username;
                 statusElement.style.color = '#43b581';
                 
-                // Cria avatares
                 createFloatingAvatars(partnerData);
                 
-                // Atualiza status
                 document.getElementById('statusIndicator').innerHTML = 
                     `✅ Conectado com: <strong>${partnerData.username}</strong>`;
             });
@@ -394,9 +380,10 @@
             });
             
             socket.on('connect_error', (error) => {
-                console.error('❌ Erro:', error);
-                statusElement.textContent = 'Erro. Tentando novamente...';
+                console.error('❌ Erro de conexão:', error);
+                statusElement.textContent = 'Erro ao conectar. Verifique a URL do backend.';
                 statusElement.style.color = '#f04747';
+                console.log('URL usada:', serverUrl);
             });
         }
         
@@ -405,12 +392,10 @@
             const container = document.getElementById('floatingAvatars');
             container.innerHTML = '';
             
-            // Seu avatar
             const userAvatar = document.createElement('div');
             userAvatar.className = 'avatar-call user';
             userAvatar.innerHTML = `<img src="${userProfile.avatar}" alt="${userProfile.username}">`;
             
-            // Avatar do parceiro
             const partnerAvatar = document.createElement('div');
             partnerAvatar.className = 'avatar-call partner';
             partnerAvatar.innerHTML = `<img src="${partnerData.avatar || 'https://ui-avatars.com/api/?name=' + partnerData.username + '&background=43b581&color=fff&size=160'}" alt="${partnerData.username}">`;
@@ -418,7 +403,6 @@
             container.appendChild(userAvatar);
             container.appendChild(partnerAvatar);
             
-            // Posiciona
             setTimeout(() => {
                 userAvatar.style.left = '30%';
                 userAvatar.style.top = '50%';
@@ -453,6 +437,4 @@
         }
     </script>
 </body>
-
 </html>
-
